@@ -1,10 +1,9 @@
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <boost/range/algorithm/count.hpp>
+#include <string.h>
 
 using namespace std;
 
@@ -12,57 +11,63 @@ using namespace std;
  * Función que muestra los participantes del grupo
  */
 void participantes();
-/**
- * Función para transformar los datos string a int
- */
-/*void transformar(vector<string> vectors, vector<int> vectori);*/
+
+//void transformacion(vector <string>, vector <int>);
 
 int main()
 {
     /**
      * 
-     * linea se usará para quitar los titulos del primer archivo
-     * linea2 se usará para quitar los titulos del segundo archivo
-     * barcode guardará el codigo de barras del primer archivo
-     * name guardará el nombre comercial de cada producto
-     * volume guardará el volumen del envase de cada producto
-     * barcode2 guardará el codigo de barras del segundo archivo
-     * quantity guardará la cantidad de cada reciclaje
-     * created guardara la fecha que se hizo el reciclaje
+     * linea es un string para quitar la primera linea del archivo dollars
+     * linea2 es un string para quitar la primera linea del archivo smi
+     * anno es un string que guarda los valores del año
+     * mes es un string que guarda los valores del mes
+     * dia es un string que guarda los valores del dia
+     * amount es un string tring que guarda el valor del dolar ese dia
+     * year es un string que guarda el año del smi
+     * value es un string que guarda el valor del smi
      * 
      */ 
-    string linea,linea2,anno, mes, dia,amount,year,value,separado, separado2;
+    string linea,linea2,anno,mes,dia,amount,year,value;
     /**
      * 
-     * vectorbarcode es un vector donde se guardarán los codigos de barra del primer archivo
-     * vectorname es un vector donde se guardarán los nombres de los productos
-     * vectorvolume es un vector donde se guardarán los volumenes de los productos
-     * vectorbarcode2 es un vector donde se guardarán los codigos de barra del segundo archivo
-     * vectorquantity es un vector donde se guardarán las cantidades del reciclaje
-     * vectorcreated es un vector donde se guardaran las fechas de reciclaje
+     * vectoramount es el vector que guarda el valor del dolar
+     * vectoryear guarda los años del smi
+     * vectorvalue guarda el monto del smi
+     * vectoranno guarda los años del dolar
+     * vectormes guarda los meses del dolar
+     * vectordia guarda los dias del dolar
      * 
      */
-    vector<string> vectoramount,vectoryear,vectorvalue,vectorseparado,vectoranno, vectormes, vectordia;
+    vector<string> vectoramount,vectoryear,vectorvalue,vectoranno, vectormes, vectordia;
     /**
      * 
-     * vectorquantityint Vector donde alojaremos las cantidades en formato doble
-     * vectorcount es un vector que guardara las cantidades totales de reciclaje
+     * vectoramountint guarda los valores del dolar en formato int
+     * vectorvalueint guarda los valores del smi en formato int
+     * vectorsuma guarda el promedio del dolar por año
+     * vectorvalores guarda el valor del smi en dolar de ese año
      * 
      */
-    vector<int> vectoramountint, vectorvalueint, vectoryearint, vectordateint, vectorsuma, vectorannoint;
+    vector<int> vectoramountint, vectorvalueint, vectorsuma, vectorvalores;
     /**
      * 
-     * contador es donde se guardara la suma de los valores en el vectorquantity
-     * auxiliar es donde guarda el valor del vector de manera auxiliar para la sumatoria
+     * contador es una variable para contar la cantidad de veces que se repite un año
+     * auxiliar guarda el valor actual del dolar ese dia
+     * suma guarda la sumatoria de los dolares ese año
+     * promedio guarda el promedio del dolar ese año
+     * dolar guarda el valor del smi en dolar
      * 
      */
-    int contador, auxiliar, suma, fecha;
+    int contador, auxiliar, suma, promedio, dolar;
 
     // Abre los csv
 
+    //validacion = ["1990", '1991', '1992', '1993', '1994', '"1995', '"1996', '"1997', '"1998', '"1999', '"2000', '"2001', '"2002', '"2003', '"2004'
+    //, '"2005', '"2006', '"2007', '"2008', '"2009', '"2010', '"2011', '"2012', '"2013', '"2014', '"2015', '"2016', '"2017', '"2018', '"2019', '"2020'];
+
     ifstream dollars, smi;
-    dollars.open("dollars1.csv");
-    smi.open("smi1.csv");
+    dollars.open("dollars.csv");
+    smi.open("smi.csv");
 
     getline(dollars,linea); // Q U I T A T Í T U L O S
     getline(smi,linea2);
@@ -91,33 +96,55 @@ int main()
         vectorvalue.push_back(value);
         }
 
+    /*ofstream archivoFixture("resumen.csv");
+
+    for(int c=0;c<100;c++){
+        archivoFixture << vectoranno[c];
+        archivoFixture << ";"+vectormes[c];
+        archivoFixture << ";" + vectoryear[c];
+        archivoFixture << ";"+vectorvalue[c];        
+        archivoFixture << ";"+vectordia[c] + ";";
+        archivoFixture << vectoramount[c] << endl;
+    }*/
+
     // Transforma los amount y value en int para utilizarlos en los calculos
+
+    //transformacion(vectoramount, vectoramountint);
 
     for (int a = 0; a<vectoramount.size(); a++){
         string Aux = vectoramount[a].substr(1,vectoramount[a].length());
-        int Valor = atoi(Aux.c_str());
-        vectoramountint.push_back(Valor);}
+        float Valor = atoi(Aux.c_str());
+        vectoramountint.push_back(Valor);
+        }
+
     for (int b = 0; b<vectorvalue.size(); b++){
         string Aux2 = vectorvalue[b].substr(1,vectorvalue[b].length());
         int Valor2 = atoi(Aux2.c_str());
         vectorvalueint.push_back(Valor2);}
-    for (int c = 0; c<vectoranno.size(); c++){
-        string Aux3 = vectoranno[c].substr(1,vectorvalue[c].length());
-        int Valor3 = atoi(Aux3.c_str());
-        vectorannoint.push_back(Valor3);}
     
-    fecha = 1990;
 
-    for (int i=0;i<vectorannoint.size();i++){
-        while (fecha < 2021){
-            if (vectorannoint[i]==fecha){
-                contador = contador + vectoramountint[i];
+    for (int i=0;i<vectoranno.size();i++){
+        if (vectoranno[i]==vectoranno[i+1]){
+            auxiliar = vectoramountint[i];
+            suma = suma + auxiliar;
+            contador++;
             }
-            vectorsuma.push_back(contador);
-            contador=0;
-            fecha++;
+        else{
+            contador++;
+            suma = suma + vectoramountint[i];
+            promedio = (suma/contador);
+            vectorsuma.push_back(promedio);
+            suma = 0;
+            contador = 0;
         }
     }
+
+    for (int j=0; j<vectorvalueint.size(); j++){
+        dolar = vectoramountint[j+5] / vectorsuma[j];
+        vectorvalores.push_back(dolar);
+    }
+
+
     return 0;
 }
 
