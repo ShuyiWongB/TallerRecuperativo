@@ -14,8 +14,6 @@ using namespace std;
  */
 void participantes();
 
-//void transformacion(vector <string>, vector <int>);
-
 int main()
 {
     /**
@@ -44,11 +42,11 @@ int main()
     vector<string> vectoramount,vectoryear,vectorvalue,vectoranno, vectormes, vectordia;
     /**
      * 
-     * vectoramountint guarda los valores del dolar en formato int
-     * vectorvalueint guarda los valores del smi en formato int
+     * vectoramountint guarda los valores del dolar en formato float
+     * vectorvalueint guarda los valores del smi en formato float
      * vectorsuma guarda el promedio del dolar por año
      * vectorvalores guarda el valor del smi en dolar de ese año
-     * años es un vector que guarda los años analizados
+     * fechas es un vector que guarda los años analizados
      * 
      */
     vector<float> vectoramountint, vectorvalueint, vectorsuma, vectorvalores, fechas;
@@ -59,9 +57,17 @@ int main()
      * suma guarda la sumatoria de los dolares ese año
      * promedio guarda el promedio del dolar ese año
      * dolar guarda el valor del smi en dolar
+     * x guarda el valor de la variable independiente
+     * y guarda el valor de la variable dependiente
+     * sumx es la suma de todas las variables independientes
+     * sumy es la suma de todas las variables dependientes
+     * sum_sqx es la suma de las variables indep al cuadrado
+     * sumxy es la suma del producto de las variables
+     * a es el punto donde la varuable x es 0
+     * b es la pendiente
      * 
      */
-    float contador, auxiliar, suma, promedio, dolar;
+    float contador, auxiliar, suma, promedio, dolar, x,y,sumx,sum_sqx,sumy,sumxy,a,b;
 
     // Abre los csv
 
@@ -73,6 +79,8 @@ int main()
 
     getline(dollars,linea); // Q U I T A T Í T U L O S
     getline(smi,linea2);
+
+    // Guarda los datos en diferentes vectores
 
     while(dollars.good())
         {
@@ -98,20 +106,9 @@ int main()
         vectorvalue.push_back(value);
         }
 
-    /*ofstream archivoFixture("resumen.csv");
-
-    for(int c=0;c<100;c++){
-        archivoFixture << vectoranno[c];
-        archivoFixture << ";"+vectormes[c];
-        archivoFixture << ";" + vectoryear[c];
-        archivoFixture << ";"+vectorvalue[c];        
-        archivoFixture << ";"+vectordia[c] + ";";
-        archivoFixture << vectoramount[c] << endl;
-    }*/
 
     // Transforma los amount y value en int para utilizarlos en los calculos
 
-    //transformacion(vectoramount, vectoramountint);
 
     for (int a = 0; a<vectoramount.size(); a++){
         string Aux = vectoramount[a].substr(1,vectoramount[a].length());
@@ -124,6 +121,7 @@ int main()
         float Valor2 = atoi(Aux2.c_str());
         vectorvalueint.push_back(Valor2);}
     
+    // Saca el promedio del dolar anualmente
 
     for (int i=0;i<vectoranno.size();i++){
         if (vectoranno[i]==vectoranno[i+1]){
@@ -141,12 +139,15 @@ int main()
         }
     }
 
+    // Convierte el smi en valor en dolares
+
     for (int j=0; j<vectorvalueint.size(); j++){
         dolar = vectoramountint[j+5] / vectorsuma[j+1];
         vectorvalores.push_back(dolar);
     }
 
-    float x,y,sumx,sum_sqx,sumy,sumxy,a,b;
+    // Iniciacion de variables a utilizar para el calculo de la regresion lineal
+
     sumx =0;
     sum_sqx =0;
     sumy=0;
@@ -155,7 +156,7 @@ int main()
     for(int i=0;i<fechas.size();i++){
         x = fechas[i];
         y = vectorvalores[i];
-        sumx = sumx +x;
+        sumx = sumx + x;
         sum_sqx = sum_sqx + (x*x);
         sumy= sumy + y;
         sumxy = sumxy + (x*y);
@@ -163,7 +164,7 @@ int main()
 
     b = (sumxy-(sumx*sumy)/fechas.size())/(sum_sqx-(sumx*sumx)/fechas.size());
     a = (sumy/fechas.size())-(b*sumx/fechas.size());
-    printf("\nY= %f + %fX\n",a,b);
+    printf("\ny = %f + %fx\n",a,b);
     participantes();
 
     return 0;
