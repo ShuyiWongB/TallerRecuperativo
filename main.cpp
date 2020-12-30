@@ -6,6 +6,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <mpi.h>
+
+#define LARGO 100
+
 
 using namespace std;
 
@@ -14,8 +18,33 @@ using namespace std;
  */
 void participantes();
 
-int main()
-{
+/**
+ * 
+ * @param procesados Arreglo con procesadores
+ * @param largo Cantidad de procesadores
+ * @return true si alguno se true 
+ */
+bool isAnyOk(bool *procesados, int largo);
+
+/**
+ * Taller Recuperativo
+ * @param argc cantidad de argumentos
+ * @param argv argumentos
+ * @return El código de salida del programa
+ */
+
+int main(int argc, char** argv){
+
+    int mi_rango; /* rango del proceso    */
+    int procesadores; /* numero de procesos   */
+    int maestro = 0; /* Identificador maestro */
+    int escritor = 1; /* Procesador escritor */
+    int tag = 0; /* etiqueta del mensaje */
+    MPI_Status estado; /* devuelve estado al recibir*/
+
+    /* Este string se usara para detener los hilos paralelos */
+    std::string parar("STOP");
+
     /**
      * 
      * linea es un string para quitar la primera linea del archivo dollars
@@ -73,100 +102,129 @@ int main()
 
     fechas = {1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020};
 
-    ifstream dollars, smi;
-    dollars.open("dollars.csv");
-    smi.open("smi.csv");
+    if (argc > 1) {
 
-    getline(dollars,linea); // Q U I T A T Í T U L O S
-    getline(smi,linea2);
+        /* Comienza las llamadas a MPI */
+        MPI_Init(&argc, &argv);
 
-    // Guarda los datos en diferentes vectores
+        /* Averiguamos el rango de nuestro proceso */
+        MPI_Comm_rank(MPI_COMM_WORLD, &mi_rango);
 
-    while(dollars.good())
-        {
-        getline(dollars, anno, '-');
-        vectoranno.push_back(anno);
+        /* Averiguamos el número de procesos que estan 
+         * ejecutando nuestro porgrama 
+         */
+        MPI_Comm_size(MPI_COMM_WORLD, &procesadores);
 
-        getline(dollars, mes, '-');
-        vectormes.push_back(mes);
-            
-        getline(dollars, dia, ';');
-        vectordia.push_back(dia);
-
-        getline(dollars, amount, '\n');
-        vectoramount.push_back(amount);
+        if (procesadores < 3) {
+            fprintf(stderr, "\nLa implementación requiere al menos 3 procesadores\n");
+            return EXIT_FAILURE;
         }
 
-    while(smi.good())
-        {
-        getline(smi, year, ';');
-        vectoryear.push_back(year);
+        if (mi_rango == 0) {
+            /**
+             * 
+             * Generación de archivos
+             */
 
-        getline(smi, value, '\n');
-        vectorvalue.push_back(value);
+            ifstream dollars, smi;
+            dollars.open("dollars.csv");
+            smi.open("smi.csv");
+
+            getline(dollars,linea); // Q U I T A T Í T U L O S
+            getline(smi,linea2);
+
+            // Guarda los datos en diferentes vectores
+
+            while(dollars.good())
+                {
+                getline(dollars, anno, '-');
+                vectoranno.push_back(anno);
+
+                getline(dollars, mes, '-');
+                vectormes.push_back(mes);
+                    
+                getline(dollars, dia, ';');
+                vectordia.push_back(dia);
+
+                getline(dollars, amount, '\n');
+                vectoramount.push_back(amount);
+                }
+
+            while(smi.good())
+                {
+                getline(smi, year, ';');
+                vectoryear.push_back(year);
+
+                getline(smi, value, '\n');
+                vectorvalue.push_back(value);
+                }
+
+
+            // Transforma los amount y value en int para utilizarlos en los calculos
+
+
+            for (int a = 0; a<vectoramount.size(); a++){
+                string Aux = vectoramount[a].substr(1,vectoramount[a].length());
+                float Valor = atoi(Aux.c_str());
+                vectoramountint.push_back(Valor);
+                }
+
+            for (int b = 0; b<vectorvalue.size(); b++){
+                string Aux2 = vectorvalue[b].substr(1,vectorvalue[b].length());
+                float Valor2 = atoi(Aux2.c_str());
+                vectorvalueint.push_back(Valor2);}
         }
 
-
-    // Transforma los amount y value en int para utilizarlos en los calculos
-
-
-    for (int a = 0; a<vectoramount.size(); a++){
-        string Aux = vectoramount[a].substr(1,vectoramount[a].length());
-        float Valor = atoi(Aux.c_str());
-        vectoramountint.push_back(Valor);
-        }
-
-    for (int b = 0; b<vectorvalue.size(); b++){
-        string Aux2 = vectorvalue[b].substr(1,vectorvalue[b].length());
-        float Valor2 = atoi(Aux2.c_str());
-        vectorvalueint.push_back(Valor2);}
-    
-    // Saca el promedio del dolar anualmente
-
-    for (int i=0;i<vectoranno.size();i++){
-        if (vectoranno[i]==vectoranno[i+1]){
-            auxiliar = vectoramountint[i];
-            suma = suma + auxiliar;
-            contador++;
+        // Saca el promedio del dolar anualmente
+        else if (mi_rango == 1){
+            for (int i=0;i<vectoranno.size();i++){
+                if (vectoranno[i]==vectoranno[i+1]){
+                    auxiliar = vectoramountint[i];
+                    suma = suma + auxiliar;
+                    contador++;
+                    }
+                else{
+                    contador++;
+                    suma = suma + vectoramountint[i];
+                    promedio = (suma/contador);
+                    vectorsuma.push_back(promedio);
+                    suma = 0;
+                    contador = 0;
+                }
             }
+
+            // Convierte el smi en valor en dolares
+
+            for (int j=0; j<vectorvalueint.size(); j++){
+                dolar = vectoramountint[j+5] / vectorsuma[j+1];
+                vectorvalores.push_back(dolar);
+            }
+        }
+        // Iniciacion de variables a utilizar para el calculo de la regresion lineal
         else{
-            contador++;
-            suma = suma + vectoramountint[i];
-            promedio = (suma/contador);
-            vectorsuma.push_back(promedio);
-            suma = 0;
-            contador = 0;
-        }
-    }
+            sumx =0;
+            sum_sqx =0;
+            sumy=0;
+            sumxy=0;
 
-    // Convierte el smi en valor en dolares
+            for(int i=0;i<fechas.size();i++){
+                x = fechas[i];
+                y = vectorvalores[i];
+                sumx = sumx + x;
+                sum_sqx = sum_sqx + (x*x);
+                sumy= sumy + y;
+                sumxy = sumxy + (x*y);
+                }
 
-    for (int j=0; j<vectorvalueint.size(); j++){
-        dolar = vectoramountint[j+5] / vectorsuma[j+1];
-        vectorvalores.push_back(dolar);
-    }
-
-    // Iniciacion de variables a utilizar para el calculo de la regresion lineal
-
-    sumx =0;
-    sum_sqx =0;
-    sumy=0;
-    sumxy=0;
-
-    for(int i=0;i<fechas.size();i++){
-        x = fechas[i];
-        y = vectorvalores[i];
-        sumx = sumx + x;
-        sum_sqx = sum_sqx + (x*x);
-        sumy= sumy + y;
-        sumxy = sumxy + (x*y);
+            b = (sumxy-(sumx*sumy)/fechas.size())/(sum_sqx-(sumx*sumx)/fechas.size());
+            a = (sumy/fechas.size())-(b*sumx/fechas.size());
+            printf("\ny = %f + %fx\n",a,b);
+            participantes();
         }
 
-    b = (sumxy-(sumx*sumy)/fechas.size())/(sum_sqx-(sumx*sumx)/fechas.size());
-    a = (sumy/fechas.size())-(b*sumx/fechas.size());
-    printf("\ny = %f + %fx\n",a,b);
-    participantes();
+        MPI_Finalize();
 
+    }
     return 0;
 }
 

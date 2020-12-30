@@ -1,8 +1,7 @@
 CXX = mpic++
-CXXFLAGS = -std=c++11 -g3 -Wall -I/usr/include/opencv4/opencv -I/usr/include/opencv4
+CXXFLAGS = -std=c++11 -g3 -Wall -fopenmp
 MKDIR = mkdir -p
-
-LIBS = libboost-dev
+LIBS = -lm -lmpi
 
 directorios:
 	$(MKDIR) build dist
