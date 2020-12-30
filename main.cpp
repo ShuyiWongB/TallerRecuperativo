@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 using namespace std;
@@ -46,9 +48,10 @@ int main()
      * vectorvalueint guarda los valores del smi en formato int
      * vectorsuma guarda el promedio del dolar por año
      * vectorvalores guarda el valor del smi en dolar de ese año
+     * años es un vector que guarda los años analizados
      * 
      */
-    vector<int> vectoramountint, vectorvalueint, vectorsuma, vectorvalores;
+    vector<float> vectoramountint, vectorvalueint, vectorsuma, vectorvalores, fechas;
     /**
      * 
      * contador es una variable para contar la cantidad de veces que se repite un año
@@ -58,12 +61,11 @@ int main()
      * dolar guarda el valor del smi en dolar
      * 
      */
-    int contador, auxiliar, suma, promedio, dolar;
+    float contador, auxiliar, suma, promedio, dolar;
 
     // Abre los csv
 
-    //validacion = ["1990", '1991', '1992', '1993', '1994', '"1995', '"1996', '"1997', '"1998', '"1999', '"2000', '"2001', '"2002', '"2003', '"2004'
-    //, '"2005', '"2006', '"2007', '"2008', '"2009', '"2010', '"2011', '"2012', '"2013', '"2014', '"2015', '"2016', '"2017', '"2018', '"2019', '"2020'];
+    fechas = {1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020};
 
     ifstream dollars, smi;
     dollars.open("dollars.csv");
@@ -119,7 +121,7 @@ int main()
 
     for (int b = 0; b<vectorvalue.size(); b++){
         string Aux2 = vectorvalue[b].substr(1,vectorvalue[b].length());
-        int Valor2 = atoi(Aux2.c_str());
+        float Valor2 = atoi(Aux2.c_str());
         vectorvalueint.push_back(Valor2);}
     
 
@@ -140,10 +142,29 @@ int main()
     }
 
     for (int j=0; j<vectorvalueint.size(); j++){
-        dolar = vectoramountint[j+5] / vectorsuma[j];
+        dolar = vectoramountint[j+5] / vectorsuma[j+1];
         vectorvalores.push_back(dolar);
     }
 
+    float x,y,sumx,sum_sqx,sumy,sumxy,a,b;
+    sumx =0;
+    sum_sqx =0;
+    sumy=0;
+    sumxy=0;
+
+    for(int i=0;i<fechas.size();i++){
+        x = fechas[i];
+        y = vectorvalores[i];
+        sumx = sumx +x;
+        sum_sqx = sum_sqx + (x*x);
+        sumy= sumy + y;
+        sumxy = sumxy + (x*y);
+        }
+
+    b = (sumxy-(sumx*sumy)/fechas.size())/(sum_sqx-(sumx*sumx)/fechas.size());
+    a = (sumy/fechas.size())-(b*sumx/fechas.size());
+    printf("\nY= %f + %fX\n",a,b);
+    participantes();
 
     return 0;
 }
